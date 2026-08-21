@@ -377,13 +377,13 @@ function effectiveSales(){
   // (so newly-entered invoices don't get double-counted against the legacy
   // monthly pivot import). Months with no invoice rows fall back to the
   // imported monthly aggregates.
-  const invoiceMonths = new Set(DATA.invoices.filter(r => r.total !== 0 || r.product).map(r => r.month));
+  const invoiceMonths = new Set(DATA.invoices.filter(r => r.product).map(r => (r.invoice_date||'').slice(0,7)+'-01'));
   const fromPivot = DATA.sales.filter(r => !invoiceMonths.has(r.month));
   const fromInvoicesAgg = {};
   DATA.invoices.forEach(r => {
     if(!r.product) return; // skip payment-only / non-product rows
-    const key = r.month + '||' + r.product;
-    if(!fromInvoicesAgg[key]) fromInvoicesAgg[key] = { month:r.month, product:r.product, category:r.category, revenue:0, quantity:0 };
+    const key = (r.invoice_date||'').slice(0,7)+'-01' + '||' + r.product;
+    if(!fromInvoicesAgg[key]) fromInvoicesAgg[key] = { month:(r.invoice_date||'').slice(0,7)+'-01', product:r.product, category:r.category, revenue:0, quantity:0 };
     fromInvoicesAgg[key].revenue += Number(r.total)||0;
     fromInvoicesAgg[key].quantity += Number(r.quantity)||0;
   });
