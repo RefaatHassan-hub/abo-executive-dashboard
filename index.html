@@ -580,21 +580,27 @@ function renderDashboard(selectedMonth){
       }
     });
 
-    // --- Top customers table (July invoice-level data, always) ---
-    const custAgg = {};
-    invoices.forEach(r => {
-      if(!r.customer || r.total === 0) return;
-      if(!custAgg[r.customer]) custAgg[r.customer] = {revenue:0, profit:0};
-      custAgg[r.customer].revenue += Number(r.total);
-      custAgg[r.customer].profit += Number(r.profit);
-    });
-    const sortedCust = Object.entries(custAgg).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,8);
-    document.getElementById('customerTable').innerHTML = `
-      <thead><tr><th>Customer</th><th class="r">Revenue</th><th class="r">Profit</th></tr></thead>
-      <tbody>
-        ${sortedCust.map(([name,v]) => `<tr><td class="name">${name}</td><td class="r num">${fmtMoney(v.revenue)}</td><td class="r num" style="color:var(--profit)">${fmtMoney(v.profit)}</td></tr>`).join('')}
-      </tbody>
-    `;
+          // --- Top customers table (dynamic by selected month) ---
+          const invForCust = selectedMonth === 'ALL' ? invoices : invoices.filter(r => (r.invoice_date||'').slice(0,7)+'-01' === selectedMonth);
+          const custAgg = {};
+          invForCust.forEach(r => {
+                    if(!r.customer || r.total === 0) return;
+                    if(!custAgg[r.customer]) custAgg[r.customer] = {revenue:0, profit:0, invoiceNos:new Set()};
+                    custAgg[r.customer].revenue += Number(r.total);
+                    custAgg[r.customer].profit += Number(r.profit);
+                    custAgg[r.customer].invoiceNos.add(r.invoice_no);
+          });
+          const sortedCust = Object.entries(custAgg).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,8);
+          if(sortedCust.length === 0){
+                    document.getElementById('customerTable').innerHTML = '<tbody><tr><td style="padding:14px 6px;color:var(--muted);font-size:12.5px;">No invoice-level detail entered for this period yet.</td></tr></tbody>';
+          }else{
+                    document.getElementById('customerTable').innerHTML = `
+                              <thead><tr><th>Customer</th><th class="r">Invoices</th><th class="r">Revenue</th><th class="r">Profit</th></tr></thead>
+                                        <tbody>
+                                                    ${sortedCust.map(([name,v]) => `<tr><td class="name">${name}</td><td class="r num">${v.invoiceNos.size}</td><td class="r num">${fmtMoney(v.revenue)}</td><td class="r num" style="color:var(--profit)">${fmtMoney(v.profit)}</td></tr>`).join('')}
+                                                              </tbody>
+                                                                      `;
+          }
   }
 
   render(monthSet.includes(selectedMonth) ? selectedMonth : 'ALL');
