@@ -549,14 +549,14 @@ function renderDashboard(selectedMonth){
     expF.forEach(r => { expByCategory[r.category] = (expByCategory[r.category]||0) + Number(r.amount); });
     const sortedExp = Object.entries(expByCategory).sort((a,b)=>b[1]-a[1]).slice(0,8);
     charts.expense = new Chart(document.getElementById('expenseChart'), {
-      type:'bar',
+      type:'pie',
       data:{
         labels: sortedExp.map(e=>e[0]),
-        datasets:[{ data: sortedExp.map(e=>e[1]), backgroundColor:'#4F8C96', borderRadius:3 }]
+        datasets:[{ data: sortedExp.map(e=>e[1]), backgroundColor:['#D98F30','#4F8C96','#7CA982','#C1666B','#8A93A3','#5D6675','#B98B4E','#3E6B74'], borderColor:'#12161D', borderWidth:2 }]
       },
       options:{
         indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}, tooltip:{callbacks:{label:(ctx)=>` ${fmtMoney(ctx.raw)}`}}},
+        plugins:{legend:{position:'right', labels:{color:'#8A93A3', font:{size:11}, boxWidth:12, padding:8}}, tooltip:{callbacks:{label:(ctx)=>{ var t=ctx.dataset.data.reduce(function(a,b){return a+b;},0); var p=t?(ctx.raw/t*100).toFixed(1):0; return ' '+ctx.label+': '+fmtMoney(ctx.raw)+' ('+p+'%)'; }}}},
         scales:{
           x:{ticks:{color:'#8A93A3', callback:(v)=>fmtMoney(v)}, grid:{color:'#2B3341'}},
           y:{ticks:{color:'#EDEAE1', font:{size:11}}, grid:{display:false}}
